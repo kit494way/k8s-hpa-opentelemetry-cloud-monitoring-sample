@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: custom-metric
+  name: custom-metric
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: custom-metric
+  template:
+    metadata:
+      labels:
+        app: custom-metric
+    spec:
+      containers:
+        - name: custom-metric
+          # TODO: replace $PROJECT_ID
+          image: gcr.io/$PROJECT_ID/custom-metric:latest
+          command:
+            - "/go/bin/main"
+          args:
+            - -metric-value=20
+          env:
+            - name: OTEL_COLLECTOR_ENDPOINT
+              value: "otel-collector.default.svc.cluster.local:55680"
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            # You must specify requests for CPU to autoscale
+            # based on CPU utilization
+            requests:
+              cpu: "250m"
